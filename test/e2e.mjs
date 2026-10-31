@@ -11,9 +11,30 @@ import { startServer } from './server.mjs';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const USERSCRIPT = path.join(ROOT, 'chaoxing-auto-next.user.js');
-const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 const CDP_PORT = 9333;
 const HOST = 'mooc1.chaoxing.com';
+
+// 浏览器：优先用环境变量 CX_BROWSER，其次自动找 Edge / Chrome
+function findBrowser() {
+  if (process.env.CX_BROWSER) return process.env.CX_BROWSER;
+  const cands = [
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/microsoft-edge',
+  ];
+  for (const p of cands) {
+    if (fs.existsSync(p)) return p;
+  }
+  return 'google-chrome';
+}
+const BROWSER = findBrowser();
+const IS_WIN = process.platform === 'win32';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -180,7 +201,7 @@ function findEv(logs, t, k) {
   console.log('模拟站点：', mockHost);
 
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cxauto-'));
-  const edge = spawn(EDGE, [
+  const browserArgs = [
     '--headless=new',
     '--disable-gpu',
     '--no-first-run',
@@ -192,11 +213,14 @@ function findEv(logs, t, k) {
     '--host-resolver-rules=MAP *.chaoxing.com 127.0.0.1',
     '--window-size=1280,900',
     'about:blank',
-  ], { stdio: 'ignore' });
+  ];
+  if (!IS_WIN) browserArgs.unshift('--no-sandbox');
+  const edge = spawn(BROWSER, browserArgs, { stdio: 'ignore' });
+  console.log('浏览器：', BROWSER);
 
   try {
     await waitHttp(`http://127.0.0.1:${CDP_PORT}/json/version`);
-    console.log('Edge 已启动');
+    console.log('浏览器已启动');
 
     const genRes = await fetch(`http://127.0.0.1:${CDP_PORT}/json/new?about:blank`, { method: 'PUT' });
     const genTarget = await genRes.json();

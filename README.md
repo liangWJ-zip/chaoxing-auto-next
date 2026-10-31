@@ -1,5 +1,7 @@
 # 超星学习通 · 任务点自动跳转
 
+**简体中文** · [English](README.en.md)
+
 ![version](https://img.shields.io/badge/version-1.4.1-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![platform](https://img.shields.io/badge/platform-Tampermonkey-black)
@@ -130,7 +132,9 @@ node test/e2e.mjs     # 23 项断言
 node test/shot.mjs    # 重新生成 README 截图
 ```
 
-> 测试依赖本机 Edge，路径在 `test/e2e.mjs` 顶部可改；首次运行会在 `test/` 下生成一个 4 秒的测试视频。
+> 测试依赖本机 Edge / Chrome，脚本会自动探测，也可以用 `CX_BROWSER=/path/to/chrome` 指定；首次运行会在 `test/` 下生成一个 4 秒的测试视频。
+
+CI 用同一套命令：`.github/workflows/e2e.yml`（手动触发，稳定后可以把 `push` 触发器打开）。
 
 ## 更新日志
 
