@@ -1,0 +1,10 @@
+# 测试产物
+test/clip.webm
+
+# 截图 / 临时文件
+*.png
+*.tmp
+screen*.png
+
+# 依赖
+node_modules/
