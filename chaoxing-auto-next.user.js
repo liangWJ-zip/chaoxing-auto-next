@@ -1,6 +1,10 @@
 // ==UserScript==
 // @name         超星学习通 · 任务点自动跳转
-// @namespace    https://local/cx-auto-next
+// @namespace    https://github.com/liangWJ-zip/chaoxing-auto-next
+// @homepageURL  https://github.com/liangWJ-zip/chaoxing-auto-next
+// @supportURL   https://github.com/liangWJ-zip/chaoxing-auto-next/issues
+// @updateURL    https://raw.githubusercontent.com/liangWJ-zip/chaoxing-auto-next/main/chaoxing-auto-next.user.js
+// @downloadURL  https://raw.githubusercontent.com/liangWJ-zip/chaoxing-auto-next/main/chaoxing-auto-next.user.js
 // @version      1.4.1
 // @description  任务点被标记完成或视频播完（ended / 进度≥99%）后自动进入下一个未完成任务点并起播；事件驱动，后台可用；只读页面状态、只模拟点击，不伪造进度。
 // @author       local

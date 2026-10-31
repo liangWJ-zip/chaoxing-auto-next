@@ -37,6 +37,7 @@
 2. 点这里安装：
    <https://raw.githubusercontent.com/liangWJ-zip/chaoxing-auto-next/main/chaoxing-auto-next.user.js>
 3. Tampermonkey 会弹出安装页，点「安装」
+4. 之后发新版本时，Tampermonkey 会通过 @updateURL 自动检查更新
 
 > Edge 上新版 Tampermonkey（MV3）需要在 `edge://extensions` 里打开 Tampermonkey 的「允许用户脚本」开关，否则脚本无法运行。
 
