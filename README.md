@@ -2,7 +2,7 @@
 
 **简体中文** · [English](README.en.md)
 
-![version](https://img.shields.io/badge/version-1.4.1-blue)
+![version](https://img.shields.io/badge/version-1.4.2-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![platform](https://img.shields.io/badge/platform-Tampermonkey-black)
 ![manifest](https://img.shields.io/badge/userscript-@grant%20GM__*%2BunsafeWindow-informational)
@@ -137,6 +137,12 @@ node test/shot.mjs    # 重新生成 README 截图
 CI 用同一套命令：`.github/workflows/e2e.yml`（手动触发，稳定后可以把 `push` 触发器打开）。
 
 ## 更新日志
+
+### v1.4.2
+- 修复走到本节末尾时会绕回前面、跳到上一条视频：现在只往前推进，走到末尾就停下（`wrapAround` 可开）
+- 页面 active 标记指向更早节点时忽略，避免进度被拽回去
+- 刷新后优先按上次记录定位当前任务点，不再因为推断失败退回“第一个未完成”
+- 播放器迟迟不出现时重试同一任务点，不再把该视频跳过
 
 ### v1.4.1
 - 学习页先挂面板、目录异步加载时持续重试，不再直接退出

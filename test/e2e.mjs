@@ -403,6 +403,23 @@ function findEv(logs, t, k) {
       await closePage(p, CDP_PORT);
     }
 
+    /* ---------- 场景 7：绝不回头 ---------- */
+    console.log('\n[7] 后面没有未完成的了 → 不能绕回前面的视频');
+    {
+      // t3/t5 预先标记完成，只留最前面的 t1 未完成；当前在 t2
+      const p = await openPage(`${origin('s7')}/?mode=nowrap&pid=s7`, CDP_PORT);
+      await poll(() => server.getLogs('s7').some((x) => x.t === 'ended' && x.k === 't2') ? true : null,
+        30000, 't2 播完');
+      await sleep(12000);
+      const logs = server.getLogs('s7');
+      const opens = logs.filter((x) => x.t === 'open').map((x) => x.k);
+      check('没有绕回 t1', !opens.includes('t1'), JSON.stringify(opens));
+      check('没有误跳其它节点', opens.length === 0, JSON.stringify(opens));
+      const mode = await p.cdp.evaluate(`window.__cxauto && window.__cxauto.state.mode`);
+      check('停在“全部完成/无可推进”状态', mode === 'done' || mode === 'blocked', String(mode));
+      await closePage(p, CDP_PORT);
+    }
+
     if (results.every((r) => r.ok)) console.log('\n全部通过');
   } catch (e) {
     console.error('\n测试执行失败：', e);

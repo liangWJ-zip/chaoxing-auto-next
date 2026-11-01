@@ -5,7 +5,7 @@
 // @supportURL   https://github.com/liangWJ-zip/chaoxing-auto-next/issues
 // @updateURL    https://raw.githubusercontent.com/liangWJ-zip/chaoxing-auto-next/main/chaoxing-auto-next.user.js
 // @downloadURL  https://raw.githubusercontent.com/liangWJ-zip/chaoxing-auto-next/main/chaoxing-auto-next.user.js
-// @version      1.4.1
+// @version      1.4.2
 // @description  任务点被标记完成或视频播完（ended / 进度≥99%）后自动进入下一个未完成任务点并起播；事件驱动，后台可用；只读页面状态、只模拟点击，不伪造进度。
 // @author       local
 // @match        *://*.chaoxing.com/*
@@ -73,6 +73,7 @@
     autoResume: true,         // 后台被暂停时恢复播放
     resumeGraceMs: 1200,
     onNonVideo: 'skip',       // skip=跳过测验/文档并提示；stop=原地停住
+    wrapAround: false,        // 走到本节末尾后是否绕回开头（默认不回头）
     notify: true,
     panel: true,              // 悬浮面板
     debug: false,
@@ -891,7 +892,9 @@
       for (var a = 0; a < s.rows.length; a++) if (s.rows[a].active) { idx = a; break; }
     }
     var start = idx >= 0 ? idx + 1 : 0;
-    var order = s.rows.slice(start).concat(start > 0 ? s.rows.slice(0, start) : []);
+    // 默认只往前走，绝不回头：本轮之后没有未完成的就停下，而不是绕回开头
+    var order = s.rows.slice(start);
+    if (CFG.wrapAround && start > 0) order = order.concat(s.rows.slice(0, start));
     for (var j = 0; j < order.length; j++) {
       var r = order[j];
       if (r.done) continue;
@@ -902,10 +905,23 @@
     return null;
   }
 
+  function rowIndex(s, key) {
+    if (!s || !s.ok || !key) return -1;
+    for (var i = 0; i < s.rows.length; i++) if (s.rows[i].key === key) return i;
+    return -1;
+  }
+
   function adoptActive(s) {
     if (!s || !s.activeKey) return false;
     var row = findRow(s, s.activeKey);
     if (!row) return false;
+    // 页面的 active 标记可能指向前面的章节，别让它把进度拽回去
+    var cur = rowIndex(s, state.currentKey);
+    var idx = rowIndex(s, row.key);
+    if (cur >= 0 && idx >= 0 && idx < cur) {
+      log('忽略倒退的当前项标记（' + row.key + '）');
+      return false;
+    }
     if (state.currentKey !== row.key) {
       log('页面当前项变为 ' + row.key);
       state.currentKey = row.key;
@@ -1022,21 +1038,27 @@
         persist();
 
         try { next.el.scrollIntoView({ block: 'center' }); } catch (e) { /* ignore */ }
-        realClick(clickTarget(next.el));
 
         state.mode = 'waiting';
         updatePanel();
 
-        var nv = await waitForNewVideo(oldVideo, oldSig, CFG.verifyVideoMs || 16000);
-        if (!nv) {
-          markSkipped(next.key, '没等到播放器');
-          if (attempt >= 2) {
-            state.mode = 'blocked';
-            updatePanel();
-            notify('连续几个任务点都没等到播放器，已停住');
-            return;
+        // 播放器没出来时重试同一个任务点，绝不用“跳过”把视频漏掉
+        var nv = null;
+        for (var tryIdx = 0; tryIdx < 2 && !nv; tryIdx++) {
+          if (tryIdx > 0) {
+            log('播放器没出现，重试一次', true);
+            await sleep(1500);
           }
-          continue;
+          realClick(clickTarget(next.el));
+          nv = await waitForNewVideo(oldVideo, oldSig, tryIdx === 0 ? (CFG.verifyVideoMs || 16000) : 12000);
+        }
+
+        if (!nv) {
+          state.mode = 'blocked';
+          updatePanel();
+          notify('在「' + next.text.slice(0, 12) + '」没等到播放器，已停住（可点“下一个”重试）');
+          log('没等到播放器，停止推进：' + next.key, true);
+          return;
         }
 
         state.video = nv;
@@ -1261,7 +1283,7 @@
     '      <button id="btn-diag" type="button">诊断</button>',
     '    </div>',
     '    <div class="log" id="log"></div>',
-    '    <div class="foot">v1.4.1 · 只读状态 · 模拟点击 · 不伪造进度</div>',
+    '    <div class="foot">v1.4.2 · 只读状态 · 模拟点击 · 不伪造进度</div>',
     '  </div>',
     '</div>'
   ].join('\n');
@@ -1579,8 +1601,11 @@
       bindVideo(v);
       state.video = v;
       state.mediaEndedFor = '';
-      // 先按页面真实情况重新定位（active 标记 / 播放器标题），避免沿用上次的旧记录
-      var located = s0.activeKey || matchByTitle(s0);
+      // 定位当前任务点：上次记录还在的话优先信它（刚点开下一个就会刷新页面），
+      // 其次才看页面的 active 标记 / 播放器标题。这样不会因为推断失败而从头开始。
+      var located = '';
+      if (state.currentKey && findRow(s0, state.currentKey)) located = state.currentKey;
+      else located = s0.activeKey || matchByTitle(s0);
       if (located) state.currentKey = located;
       else if (!state.currentKey) state.currentKey = inferCurrent(s0);
       var r0 = findRow(s0, state.currentKey);
@@ -1607,7 +1632,7 @@
 
   function start() {
     if (window.__cxAutoNext || (PAGE && PAGE.__cxAutoNext)) return;
-    window.__cxAutoNext = { version: '1.4.1' };
+    window.__cxAutoNext = { version: '1.4.2' };
     try { PAGE.__cxAutoNext = window.__cxAutoNext; } catch (e) { /* ignore */ }
 
     if (IS_TOP) {
@@ -1706,7 +1731,7 @@
 
   if (IS_TOP) {
     API = {
-      version: '1.4.1',
+      version: '1.4.2',
       cfg: CFG,
       state: state,
       scan: scan,

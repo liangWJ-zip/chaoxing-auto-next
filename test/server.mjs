@@ -70,6 +70,10 @@ const INDEX = (mode, pid, late) => `<!doctype html>
     document.getElementById('iframe').src='/player.html?k='+k+'&name='+encodeURIComponent(name)+'&mode='+MODE+'&pid='+PID+'&r='+Math.random();
   }
   window.openPoint = openPoint;
+  // nowrap 模式：把后面的点预先标记完成，但故意留一个更早的 t1 未完成
+  if (MODE === 'nowrap') {
+    setTimeout(function(){ markDone('t3'); markDone('t5'); ev({t:'preset',k:'t3+t5'}); }, 400);
+  }
   window.addEventListener('message',function(e){
     var d=e.data; if(!d||!d.k) return;
     if(d.type==='mock-ended'){

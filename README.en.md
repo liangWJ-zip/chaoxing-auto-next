@@ -1,6 +1,6 @@
 # Chaoxing (Xuexitong) · Auto Next Task Point
 
-![version](https://img.shields.io/badge/version-1.4.1-blue)
+![version](https://img.shields.io/badge/version-1.4.2-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![platform](https://img.shields.io/badge/platform-Tampermonkey-black)
 
@@ -115,6 +115,12 @@ node test/shot.mjs    # regenerate the README screenshot
 The browser is auto-detected, or set `CX_BROWSER=/path/to/chrome`. CI runs the same command (`.github/workflows/e2e.yml`, manual trigger).
 
 ## Changelog
+
+### v1.4.2
+- Never wrap around at the end of a section: forward-only, stops when nothing is left (`wrapAround` opt-in)
+- Ignore stale "active" markers that point to an earlier row
+- Prefer the last known task point after a reload instead of falling back to "first unfinished"
+- Retry the same task point when the player is slow to appear instead of skipping that video
 
 ### v1.4.1
 - Mount the panel first and retry while the catalog is still loading
