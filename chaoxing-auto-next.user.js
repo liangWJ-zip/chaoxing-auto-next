@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         超星学习通 · 任务点自动跳转
-// @namespace    https://github.com/liangWJ-zip/chaoxing-auto-next
+// @namespace    https://local/cx-auto-next
 // @homepageURL  https://github.com/liangWJ-zip/chaoxing-auto-next
 // @supportURL   https://github.com/liangWJ-zip/chaoxing-auto-next/issues
 // @updateURL    https://raw.githubusercontent.com/liangWJ-zip/chaoxing-auto-next/main/chaoxing-auto-next.user.js
